@@ -39,7 +39,7 @@ export class PeopleResponse {
   lastLoginDate: Date;
 
   @ApiProperty()
-  isActive: boolean;
+  activatedAt: Date;
 
   // @ApiProperty({ type: Date })
   // createdAt?: Date;
@@ -52,10 +52,9 @@ export class PeopleResponse {
     this.fullname = user.fullname;
     this.email = user.email;
     this.address = user.address;
-    // this.state = user.state;
     this.gender = user.gender;
     this.country = user.country;
-    this.isActive = user.isActive;
+    this.activatedAt = user.activatedAt;
     this.language = user.language;
     this.lastLoginDate = user.lastLoginDate;
   }

@@ -44,6 +44,30 @@ export class PeopleRegisterDto {
   address?: string;
 }
 
+export class PeopleLoginDto {
+  @ApiProperty()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  password: string;
+}
+export class ForgotPasswordDto {
+  @IsEmail()
+  @IsNotEmpty()
+  @ApiProperty()
+  email!: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  password: string;
+}
+
 class AuthTokensDto {
   @ApiProperty()
   accessToken: string;

@@ -70,4 +70,24 @@ export class UserTokensService {
       return Promise.reject(error);
     }
   }
+
+  async checkTokenIsValid(
+    token: string,
+    type: TOKEN_TYPES,
+    userModel?: USER_MODELS,
+  ) {
+    try {
+      const tokenExists = await this.userTokenRepository.findOne({
+        token,
+        type,
+        ...(userModel && { userModel }),
+      });
+      if (!tokenExists) return Promise.reject('Invalid Token');
+      if (new Date().getTime() > new Date(tokenExists.expires).getTime())
+        return Promise.reject('Token Expired');
+      return tokenExists;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
 }

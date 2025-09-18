@@ -24,14 +24,11 @@ export class People {
   @Prop({ required: false })
   country: string;
 
-  // @Prop({ required: false })
-  // state: string;
-
   @Prop({ required: false })
   address?: string;
 
-  @Prop({ type: Boolean, required: false, default: false })
-  isActive: boolean;
+  @Prop({ type: Date, required: false, default: null })
+  activatedAt: Date;
 
   @Prop({
     type: String,
