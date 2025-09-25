@@ -2,17 +2,16 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type PeopleDocument = HydratedDocument<People>;
-export const allowedLanguages = ['en'] as const;
 
 export const allowedGenders = ['male', 'female'] as const;
 export type Gender = (typeof allowedGenders)[number];
 
-export const PeopleSchemaName = 'People';
+export const PeopleSchemaName = 'PeopleModel';
 @Schema({ timestamps: true, autoIndex: true, collection: PeopleSchemaName })
 export class People {
   _id: MongooseSchema.Types.ObjectId;
 
-  @Prop({ unique: true, required: true })
+  @Prop({ required: true })
   fullname: string;
 
   @Prop({ required: false, select: false })
@@ -22,21 +21,13 @@ export class People {
   email: string;
 
   @Prop({ required: false })
-  country: string;
+  state: string;
 
   @Prop({ required: false })
   address?: string;
 
   @Prop({ type: Date, required: false, default: null })
   activatedAt: Date;
-
-  @Prop({
-    type: String,
-    required: false,
-    enum: allowedLanguages,
-    default: 'en',
-  })
-  language: (typeof allowedLanguages)[number];
 
   @Prop({
     type: String,

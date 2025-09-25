@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
+import { allowedGenders } from './../schema/people.schema';
 
 export class CreatePersonDto {
   @IsNotEmpty()
@@ -19,10 +19,25 @@ export class CreatePersonDto {
   @ApiProperty()
   email: string;
 
-  @IsNumber()
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(10)
+  @ApiProperty()
+  address?: string;
+
+  @IsString()
   @IsOptional()
   @ApiProperty()
-  countryCode?: number;
+  state?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  image?: string;
+
+  @IsOptional()
+  @ApiProperty()
+  gender?: (typeof allowedGenders)[number];
 
   @IsNotEmpty()
   @IsString()

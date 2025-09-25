@@ -10,12 +10,12 @@ import { USER_MODELS } from 'src/shared/enums/index.enum';
 export type UserTokenDocument = HydratedDocument<UserToken>;
 
 export enum TOKEN_TYPES {
-  FORGOTPASSWORD = 'forgotPassword',
-  RESETPASSWORD = 'resetpassword',
-  EMAILVERIFICATION = 'emailVerification',
+  FORGOT_PASSWORD = 'forgotPassword',
+  RESET_PASSWORD = 'resetpassword',
+  EMAIL_VERIFICATION = 'emailVerification',
 }
 
-@Schema({ timestamps: true, collection: 'userTokens' })
+@Schema({ timestamps: true, collection: 'UserTokens' })
 export class UserToken {
   _id: MongooseSchema.Types.ObjectId;
 
@@ -43,12 +43,6 @@ export class UserToken {
 
   @Prop({ type: Date, required: true })
   expires: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  updatedAt: Date;
 }
 
 export const UserTokenSchema = SchemaFactory.createForClass(UserToken);

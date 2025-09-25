@@ -16,7 +16,7 @@ import { UserSessionsService } from 'src/user-sessions/user-sessions.service';
 import { TOKEN_TYPES } from 'src/user-tokens/schema/user-token.schema';
 import { UserTokensService } from 'src/user-tokens/user-tokens.service';
 import appConfig from '../shared/config/index.config';
-import { AccessJWTPayload } from './auth.interface';
+import { AccessJWTPayload, LoginMode } from './auth.interface';
 import {
   ForgotPasswordDto,
   PeopleLoginDto,
@@ -33,18 +33,21 @@ export class AuthService {
     private readonly userSessionsService: UserSessionsService,
   ) {}
 
-  async peopleLogin(data: PeopleLoginDto) {
+  async peopleLogin(data: PeopleLoginDto, mode: LoginMode) {
     try {
       const { email, password } = data;
       const user =
         await this.peopleService.peopleRepository.getUserWithPassword({
           email,
         });
+
       if (!user) return Promise.reject('Invalid Credentials.');
       if (!user.activatedAt)
         return Promise.reject('Please activate your account.');
-      const passwordMatches = await bcrypt.compare(password, user.password);
-      if (!passwordMatches) return Promise.reject('Invalid Credentials.');
+      if (mode === 'credential_provider') {
+        const passwordMatches = await bcrypt.compare(password, user.password);
+        if (!passwordMatches) return Promise.reject('Invalid Credentials.');
+      }
       const [tokens] = await Promise.all([
         this.getTokens({
           email,
@@ -70,6 +73,7 @@ export class AuthService {
     const { email, fullname } = data;
     const savedUser = await this.peopleService.createUser({ ...data });
     const emailVerificationToken = generateLongToken();
+    console.log('first', emailVerificationToken);
     const tokenExpires = new Date(new Date().getTime() + 5 * 60 * 1000); //5 minutes
     const { id: userId } = savedUser;
 
@@ -77,9 +81,10 @@ export class AuthService {
       userId,
       token: emailVerificationToken,
       tokenExpires,
-      type: TOKEN_TYPES.EMAILVERIFICATION,
+      type: TOKEN_TYPES.EMAIL_VERIFICATION,
       userType: USER_MODELS.PEOPLE,
     });
+
     const tokens = await this.getTokens({
       email,
       id: userId,
@@ -93,6 +98,7 @@ export class AuthService {
       user: savedUser,
     };
   }
+
   async peopleForgotPassword(input: ForgotPasswordDto, userType: USER_MODELS) {
     try {
       const { email } = input;
@@ -104,7 +110,7 @@ export class AuthService {
         userId: details.user.id,
         token: resetPasswordToken,
         tokenExpires: resetPasswordExpire,
-        type: TOKEN_TYPES.FORGOTPASSWORD,
+        type: TOKEN_TYPES.FORGOT_PASSWORD,
         userType,
       });
 
@@ -189,5 +195,9 @@ export class AuthService {
       payload,
     });
     return { accessToken, refreshToken };
+  }
+  async validateGoogleUser(data: PeopleRegisterDto) {
+    const savedUser = await this.peopleService.createUser({ ...data });
+    return savedUser;
   }
 }

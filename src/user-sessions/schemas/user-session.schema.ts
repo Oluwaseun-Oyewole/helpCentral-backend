@@ -34,12 +34,6 @@ export class UserSession {
 
   @Prop({ type: SchemaTypes.Mixed, required: false })
   payload: AccessJWTPayload;
-
-  @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  updatedAt: Date;
 }
 
 export const UserSessionSchema = SchemaFactory.createForClass(UserSession);

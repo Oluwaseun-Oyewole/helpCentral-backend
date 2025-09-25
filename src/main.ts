@@ -1,10 +1,12 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpStatus, ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
 import {
   DocumentBuilder,
   SwaggerCustomOptions,
   SwaggerModule,
 } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { PaginationMeta } from './shared/common/abstract.interface';
 import appConfig from './shared/config/index.config';
 import {
@@ -19,6 +21,14 @@ import {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      validateCustomDecorators: true,
+      transform: true,
+      whitelist: true,
+      errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+    }),
+  );
   const config = new DocumentBuilder()
     .addServer(`http://localhost:${appConfig().port}/`)
     .setTitle('Help Central Backend API Gateway')
@@ -50,6 +60,7 @@ async function bootstrap() {
   };
 
   SwaggerModule.setup('api', app, document, customOptions);
+  app.useGlobalGuards(new JwtAuthGuard(new Reflector()));
   await app.listen(appConfig().port, async () =>
     console.log(`Application is running on port: ${await app.getUrl()}`),
   );

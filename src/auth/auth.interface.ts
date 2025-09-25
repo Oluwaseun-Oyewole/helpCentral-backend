@@ -6,3 +6,5 @@ export interface AccessJWTPayload {
   email: string;
   type: USER_MODELS.PEOPLE;
 }
+
+export type LoginMode = 'oauth' | 'credential_provider';
