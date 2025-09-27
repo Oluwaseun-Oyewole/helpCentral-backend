@@ -9,7 +9,7 @@ import { USER_MODELS } from 'src/shared/enums/index.enum';
 
 export type UserSessionDocument = HydratedDocument<UserSession>;
 
-@Schema({ timestamps: true, autoIndex: true, collection: 'userSessions' })
+@Schema({ timestamps: true, autoIndex: true, collection: 'UserSessions' })
 export class UserSession {
   _id: MongooseSchema.Types.ObjectId;
 

@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { PeopleResponse } from 'src/people/dto/people-response.dto';
 import { allowedGenders, People } from 'src/people/schema/people.schema';
+import { SponsorResponse } from 'src/sponsors/dto/sponsor-response.dto';
 
 export class PeopleRegisterDto {
   @IsNotEmpty()
@@ -47,7 +48,37 @@ export class PeopleRegisterDto {
   address?: string;
 }
 
-export class PeopleLoginDto {
+export class SponsorRegisterDto {
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(6)
+  @ApiProperty()
+  fullname: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  @ApiProperty()
+  email!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(6)
+  @ApiProperty()
+  password: string;
+}
+
+export class verifyAccountDto {
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty()
+  token: string;
+
+  @ApiProperty()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
+export class LoginDto {
   @ApiProperty()
   @IsEmail()
   @IsNotEmpty()
@@ -99,5 +130,28 @@ export class PeopleAuthResponseDto {
       data.user instanceof PeopleResponse
         ? data.user
         : new PeopleResponse(data.user);
+  }
+}
+
+export class SponsorsAuthResponseDto {
+  @ApiProperty()
+  message: string;
+
+  @ApiProperty({ type: AuthTokensDto })
+  tokens: AuthTokensDto;
+
+  @ApiProperty({ type: SponsorResponse })
+  user: SponsorResponse;
+
+  constructor(data: {
+    message: string;
+    tokens: Record<'accessToken' | 'refreshToken', string>;
+    user: People | SponsorResponse;
+  }) {
+    ((this.message = data.message), (this.tokens = data.tokens));
+    this.user =
+      data.user instanceof SponsorResponse
+        ? data.user
+        : new SponsorResponse(data.user);
   }
 }

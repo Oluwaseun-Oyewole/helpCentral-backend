@@ -8,10 +8,13 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { MailService } from 'src/integration-services/mail/mail-service';
 import { PeopleResponse } from 'src/people/dto/people-response.dto';
 import { PeopleService } from 'src/people/people.service';
 import { USER_MODELS } from 'src/shared/enums/index.enum';
 import { generateLongToken } from 'src/shared/utils/index.utils';
+import { SponsorResponse } from 'src/sponsors/dto/sponsor-response.dto';
+import { SponsorsService } from 'src/sponsors/sponsors.service';
 import { UserSessionsService } from 'src/user-sessions/user-sessions.service';
 import { TOKEN_TYPES } from 'src/user-tokens/schema/user-token.schema';
 import { UserTokensService } from 'src/user-tokens/user-tokens.service';
@@ -19,8 +22,10 @@ import appConfig from '../shared/config/index.config';
 import { AccessJWTPayload, LoginMode } from './auth.interface';
 import {
   ForgotPasswordDto,
-  PeopleLoginDto,
+  LoginDto,
   PeopleRegisterDto,
+  SponsorRegisterDto,
+  verifyAccountDto,
 } from './dto/auth.dto';
 
 @Injectable()
@@ -28,12 +33,14 @@ export class AuthService {
   constructor(
     @Inject(forwardRef(() => PeopleService))
     private readonly peopleService: PeopleService,
+    private readonly sponsorService: SponsorsService,
     private readonly userTokenService: UserTokensService,
     private readonly jwtService: JwtService,
     private readonly userSessionsService: UserSessionsService,
+    private mailService: MailService,
   ) {}
 
-  async peopleLogin(data: PeopleLoginDto, mode: LoginMode) {
+  async peopleLogin(data: LoginDto, mode: LoginMode) {
     try {
       const { email, password } = data;
       const user =
@@ -69,12 +76,48 @@ export class AuthService {
     }
   }
 
+  async sponsorLogin(data: LoginDto, mode: LoginMode) {
+    try {
+      const { email, password } = data;
+      const user =
+        await this.sponsorService.sponsorRepository.getUserWithPassword({
+          email,
+        });
+
+      if (!user) return Promise.reject('Invalid Credentials.');
+      if (!user.activatedAt)
+        return Promise.reject('Please activate your account.');
+      if (mode === 'credential_provider') {
+        const passwordMatches = await bcrypt.compare(password, user.password);
+        if (!passwordMatches) return Promise.reject('Invalid Credentials.');
+      }
+      const [tokens] = await Promise.all([
+        this.getTokens({
+          email,
+          id: user._id.toString(),
+          name: user.fullname,
+          type: USER_MODELS.SPONSOR,
+        }),
+      ]);
+      this.sponsorService.sponsorRepository.update(user._id, {
+        $set: { lastLoginDate: new Date().toISOString() },
+      });
+      return {
+        message: 'Login Successful',
+        tokens,
+        user: new SponsorResponse(user),
+      };
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
   async peopleRegister(data: PeopleRegisterDto) {
     const { email, fullname } = data;
     const savedUser = await this.peopleService.createUser({ ...data });
     const emailVerificationToken = generateLongToken();
-    console.log('first', emailVerificationToken);
-    const tokenExpires = new Date(new Date().getTime() + 5 * 60 * 1000); //5 minutes
+    const emailVerificationLink = `${appConfig().appLink}/verify/?token=${emailVerificationToken}&email=${savedUser.email}`;
+    const tokenExpires = new Date(new Date().getTime() + 15 * 60 * 1000); //15 minutes
     const { id: userId } = savedUser;
 
     await this.userTokenService.saveUserToken({
@@ -83,6 +126,12 @@ export class AuthService {
       tokenExpires,
       type: TOKEN_TYPES.EMAIL_VERIFICATION,
       userType: USER_MODELS.PEOPLE,
+    });
+
+    await this.mailService.sendRegistrationEmail({
+      to: email,
+      name: fullname,
+      link: emailVerificationLink,
     });
 
     const tokens = await this.getTokens({
@@ -99,7 +148,103 @@ export class AuthService {
     };
   }
 
-  async peopleForgotPassword(input: ForgotPasswordDto, userType: USER_MODELS) {
+  async sponsorRegister(data: SponsorRegisterDto) {
+    const { email, fullname } = data;
+    const savedUser = await this.sponsorService.createUser({ ...data });
+    const emailVerificationToken = generateLongToken();
+    const emailVerificationLink = `${appConfig().appLink}/verify/?token=${emailVerificationToken}&email=${savedUser.email}`;
+    const tokenExpires = new Date(new Date().getTime() + 15 * 60 * 1000); //15 minutes
+    const { id: userId } = savedUser;
+
+    await this.userTokenService.saveUserToken({
+      userId,
+      token: emailVerificationToken,
+      tokenExpires,
+      type: TOKEN_TYPES.EMAIL_VERIFICATION,
+      userType: USER_MODELS.SPONSOR,
+    });
+
+    await this.mailService.sendRegistrationEmail({
+      to: email,
+      name: fullname,
+      link: emailVerificationLink,
+    });
+
+    const tokens = await this.getTokens({
+      email,
+      id: userId,
+      name: fullname,
+      type: USER_MODELS.SPONSOR,
+    });
+
+    return {
+      message: 'Registration successful',
+      tokens,
+      user: savedUser,
+    };
+  }
+
+  async verifyAccount(input: verifyAccountDto) {
+    try {
+      const isTokenValid =
+        await this.userTokenService.checkEmailTokenIsValid(input);
+      const details = await this.getUserTypeDetails(USER_MODELS.PEOPLE, {
+        email: input.email,
+      });
+      if (!isTokenValid) Promise.reject('Invalid token');
+      if (!details || !details?.user) throw new Error('User Does Not Exist');
+      if (details?.user.activatedAt) throw new Error('User already activated');
+      await this.peopleService.peopleRepository.update(details.user.id, {
+        $set: {
+          activatedAt: new Date().toISOString(),
+        },
+      });
+      await this.userTokenService.deleteAllUserToken(details.user.id);
+      return {
+        message: 'Account successfully activated',
+      };
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  async resendEmailLink(input: verifyAccountDto) {
+    try {
+      const user = await this.peopleService.checkIfUserExist({
+        email: input.email,
+      });
+      if (!user) throw new Error('User Does Not Exist');
+
+      if (!user) throw new Error('User Does Not Exist');
+      if (user.activatedAt) throw new Error('User already activated');
+
+      const emailVerificationToken = generateLongToken();
+      const emailVerificationLink = `${appConfig().appLink}/verify/?token=${emailVerificationToken}&email=${user.email}`;
+      const tokenExpires = new Date(new Date().getTime() + 15 * 60 * 1000); //15 minutes
+      const { id: userId } = user;
+
+      await this.userTokenService.saveUserToken({
+        userId,
+        token: emailVerificationToken,
+        tokenExpires,
+        type: TOKEN_TYPES.EMAIL_VERIFICATION,
+      });
+
+      await this.mailService.sendRegistrationEmail({
+        to: user.email,
+        name: user.fullname,
+        link: emailVerificationLink,
+      });
+
+      return {
+        message: 'Link sent to your email address',
+      };
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  async forgotPassword(input: ForgotPasswordDto, userType: USER_MODELS) {
     try {
       const { email } = input;
       const details = await this.getUserTypeDetails(userType, { email });
@@ -161,7 +306,6 @@ export class AuthService {
         if (!details) return Promise.reject('Invalid user');
         return { type: type, user: details };
       }
-
       default:
         throw new NotFoundException('Invalid User');
     }

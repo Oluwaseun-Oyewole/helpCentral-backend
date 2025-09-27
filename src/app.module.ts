@@ -9,6 +9,7 @@ import appConfig from './shared/config/index.config';
 import { SponsorsModule } from './sponsors/sponsors.module';
 import { UserSessionsModule } from './user-sessions/user-sessions.module';
 import { UserTokensModule } from './user-tokens/user-tokens.module';
+import { IntegrationServicesModule } from './integration-services/integration-services.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UserTokensModule } from './user-tokens/user-tokens.module';
     AuthModule,
     UserSessionsModule,
     UserTokensModule,
+    IntegrationServicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

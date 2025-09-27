@@ -14,9 +14,12 @@ import { USER_MODELS } from 'src/shared/enums/index.enum';
 import { AuthService } from './auth.service';
 import {
   ForgotPasswordDto,
+  LoginDto,
   PeopleAuthResponseDto,
-  PeopleLoginDto,
   PeopleRegisterDto,
+  SponsorRegisterDto,
+  SponsorsAuthResponseDto,
+  verifyAccountDto,
 } from './dto/auth.dto';
 import { GoogleOAuthGuard } from './guards/google-auth/google-auth.guard';
 
@@ -26,10 +29,8 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Public()
-  @Post('/login')
-  async peopleLogin(
-    @Body() body: PeopleLoginDto,
-  ): Promise<PeopleAuthResponseDto> {
+  @Post('/people/login')
+  async peopleLogin(@Body() body: LoginDto): Promise<PeopleAuthResponseDto> {
     return await this.authService
       .peopleLogin(body, 'credential_provider')
       .catch((error: Error) => {
@@ -39,7 +40,18 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Public()
-  @Post('/register')
+  @Post('/sponsor/login')
+  async sponsorLogin(@Body() body: LoginDto): Promise<SponsorsAuthResponseDto> {
+    return await this.authService
+      .sponsorLogin(body, 'credential_provider')
+      .catch((error: Error) => {
+        throw new BadRequestException(error.message || error, { cause: error });
+      });
+  }
+
+  @ApiBearerAuth()
+  @Public()
+  @Post('/people/register')
   async peopleRegister(
     @Body() body: PeopleRegisterDto,
   ): Promise<PeopleAuthResponseDto> {
@@ -50,10 +62,54 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Public()
+  @Post('/sponsor/register')
+  async sponsorRegister(
+    @Body() body: SponsorRegisterDto,
+  ): Promise<SponsorsAuthResponseDto> {
+    return await this.authService
+      .sponsorRegister(body)
+      .catch((error: Error) => {
+        throw new BadRequestException(error.message || error, { cause: error });
+      });
+  }
+
+  @ApiBearerAuth()
+  @Public()
+  @Post('/verify')
+  async verifyAccount(@Body() body: verifyAccountDto) {
+    return await this.authService.verifyAccount(body).catch((error: Error) => {
+      throw new BadRequestException(error.message || error, { cause: error });
+    });
+  }
+
+  @ApiBearerAuth()
+  @Public()
+  @Post('/resend')
+  async resend(@Body() body: verifyAccountDto) {
+    return await this.authService
+      .resendEmailLink(body)
+      .catch((error: Error) => {
+        throw new BadRequestException(error.message || error, { cause: error });
+      });
+  }
+
+  @ApiBearerAuth()
+  @Public()
   @Post('/people/forgotPassword')
   async peopleForgotPassword(@Body() body: ForgotPasswordDto) {
     return await this.authService
-      .peopleForgotPassword(body, USER_MODELS.PEOPLE)
+      .forgotPassword(body, USER_MODELS.PEOPLE)
+      .catch((error) => {
+        throw new BadRequestException(error);
+      });
+  }
+
+  @ApiBearerAuth()
+  @Public()
+  @Post('/people/sponsorPassword')
+  async sponsorForgotPassword(@Body() body: ForgotPasswordDto) {
+    return await this.authService
+      .forgotPassword(body, USER_MODELS.SPONSOR)
       .catch((error) => {
         throw new BadRequestException(error);
       });

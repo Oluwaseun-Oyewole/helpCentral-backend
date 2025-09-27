@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { IntegrationServicesModule } from 'src/integration-services/integration-services.module';
 import { PeopleModule } from 'src/people/people.module';
+import { SponsorsModule } from 'src/sponsors/sponsors.module';
 import { UserSessionsModule } from 'src/user-sessions/user-sessions.module';
 import { UserTokensModule } from 'src/user-tokens/user-tokens.module';
 import appConfig from '../shared/config/index.config';
@@ -13,12 +15,14 @@ import { GoogleStrategy } from './strategies/google.strategy';
 @Module({
   imports: [
     PeopleModule,
+    SponsorsModule,
     JwtModule.register({
       secret: appConfig().jwtsecretkey,
     }),
     PassportModule,
     UserSessionsModule,
     UserTokensModule,
+    IntegrationServicesModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AccessTokenStrategy, GoogleStrategy],
