@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Req,
   Res,
@@ -11,12 +12,14 @@ import {
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Public } from 'src/shared/decorators/request/public-request.decorator';
 import { USER_MODELS } from 'src/shared/enums/index.enum';
+import appConfig from '../shared/config/index.config';
 import { AuthService } from './auth.service';
 import {
   ForgotPasswordDto,
   LoginDto,
   PeopleAuthResponseDto,
   PeopleRegisterDto,
+  ResetPasswordDto,
   SponsorRegisterDto,
   SponsorsAuthResponseDto,
   verifyAccountDto,
@@ -75,11 +78,38 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Public()
-  @Post('/verify')
-  async verifyAccount(@Body() body: verifyAccountDto) {
-    return await this.authService.verifyAccount(body).catch((error: Error) => {
-      throw new BadRequestException(error.message || error, { cause: error });
-    });
+  @Post('/people/verify')
+  async verifyPeopleAccount(@Body() body: verifyAccountDto) {
+    return await this.authService
+      .verifyPeopleAccount(body)
+      .catch((error: Error) => {
+        throw new BadRequestException(error.message || error, { cause: error });
+      });
+  }
+
+  @ApiBearerAuth()
+  @Public()
+  @Post('/people/verify')
+  async verifySponsorAccount(@Body() body: verifyAccountDto) {
+    return await this.authService
+      .verifySponsorAccount(body)
+      .catch((error: Error) => {
+        throw new BadRequestException(error.message || error, { cause: error });
+      });
+  }
+
+  @ApiBearerAuth()
+  @Public()
+  @Post('/resetpassword/:token')
+  async resetPassword(
+    @Param('token') token: string,
+    @Body() body: ResetPasswordDto,
+  ): Promise<{ message: string }> {
+    return await this.authService
+      .resetPassword({ ...body, token })
+      .catch((error) => {
+        throw new BadRequestException(error);
+      });
   }
 
   @ApiBearerAuth()
@@ -135,7 +165,7 @@ export class AuthController {
         });
       });
     res.redirect(
-      `http://localhost:4000?token=${response?.tokens?.accessToken}`,
+      `${appConfig().appLink}?token=${response?.tokens?.accessToken}`,
     );
   }
 }

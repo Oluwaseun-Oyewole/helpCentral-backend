@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import { signTemplate } from 'src/templates/signup';
+import appConfig from '../../shared/config/index.config';
 import { emailConfig, EmailData, EmailTemplate } from './mail.interface';
 
 @Injectable()
@@ -11,10 +12,10 @@ export class NodemailerService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: appConfig().SMTP_HOST,
       port: 587,
       secure: false,
-      auth: { user: 'findseunoyewole@gmaiil.com', pass: 'yixx kngi prox qfqz' },
+      auth: { user: appConfig().SMTP_USER, pass: appConfig().SMTP_PASS },
       //   connectionTimeout: 10000, // 10 seconds
       socketTimeout: 10000, // 10 seconds
       //       pool: true, // Enable connection pooling

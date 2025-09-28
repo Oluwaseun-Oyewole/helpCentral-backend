@@ -12,7 +12,7 @@ import { MailService } from 'src/integration-services/mail/mail-service';
 import { PeopleResponse } from 'src/people/dto/people-response.dto';
 import { PeopleService } from 'src/people/people.service';
 import { USER_MODELS } from 'src/shared/enums/index.enum';
-import { generateLongToken } from 'src/shared/utils/index.utils';
+import { generateLongToken, hashPassword } from 'src/shared/utils/index.utils';
 import { SponsorResponse } from 'src/sponsors/dto/sponsor-response.dto';
 import { SponsorsService } from 'src/sponsors/sponsors.service';
 import { UserSessionsService } from 'src/user-sessions/user-sessions.service';
@@ -184,7 +184,7 @@ export class AuthService {
     };
   }
 
-  async verifyAccount(input: verifyAccountDto) {
+  async verifyPeopleAccount(input: verifyAccountDto) {
     try {
       const isTokenValid =
         await this.userTokenService.checkEmailTokenIsValid(input);
@@ -208,6 +208,29 @@ export class AuthService {
     }
   }
 
+  async verifySponsorAccount(input: verifyAccountDto) {
+    try {
+      const isTokenValid =
+        await this.userTokenService.checkEmailTokenIsValid(input);
+      const details = await this.getUserTypeDetails(USER_MODELS.SPONSOR, {
+        email: input.email,
+      });
+      if (!isTokenValid) Promise.reject('Invalid token');
+      if (!details || !details?.user) throw new Error('User Does Not Exist');
+      if (details?.user.activatedAt) throw new Error('User already activated');
+      await this.sponsorService.sponsorRepository.update(details.user.id, {
+        $set: {
+          activatedAt: new Date().toISOString(),
+        },
+      });
+      await this.userTokenService.deleteAllUserToken(details.user.id);
+      return {
+        message: 'Account successfully activated',
+      };
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
   async resendEmailLink(input: verifyAccountDto) {
     try {
       const user = await this.peopleService.checkIfUserExist({
@@ -251,12 +274,19 @@ export class AuthService {
       if (!details || !details?.user) throw new Error('User Does Not Exist');
       const resetPasswordToken = generateLongToken();
       const resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
       await this.userTokenService.saveUserToken({
         userId: details.user.id,
         token: resetPasswordToken,
         tokenExpires: resetPasswordExpire,
         type: TOKEN_TYPES.FORGOT_PASSWORD,
         userType,
+      });
+      const emailResetLink = `${appConfig().appLink}/reset/?token=${resetPasswordToken}&email=${details.user.email}`;
+      await this.mailService.sendRegistrationEmail({
+        to: details.user.email,
+        name: details.user.fullname,
+        link: emailResetLink,
       });
 
       return {
@@ -267,6 +297,32 @@ export class AuthService {
     }
   }
 
+  async resetPassword(input: Record<'password' | 'token', string>) {
+    try {
+      const { password, token } = input;
+      const userToken = await this.userTokenService.checkTokenIsValid(
+        token,
+        TOKEN_TYPES.FORGOT_PASSWORD,
+      );
+      const userDetails = await this.getUserTypeDetails(userToken.userModel, {
+        id: userToken.user.toString(),
+      });
+      if (!userDetails || !userDetails?.user) throw new Error('Invalid User');
+      const hashedPassword = await hashPassword(password);
+      const { id: userId } = userDetails.user;
+      await this.updatePasswordOfUserType(
+        userDetails.type,
+        userId,
+        hashedPassword,
+      );
+      await this.userSessionsService.deleteAllUserSession(userId);
+      return {
+        message: 'Password Reset Successful',
+      };
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
   async verifyUserJWTToken(token: string) {
     try {
       const payload: AccessJWTPayload & { jti: string } =
@@ -343,5 +399,33 @@ export class AuthService {
   async validateGoogleUser(data: PeopleRegisterDto) {
     const savedUser = await this.peopleService.createUser({ ...data });
     return savedUser;
+  }
+
+  private async updatePasswordOfUserType(
+    type: USER_MODELS,
+    userId: string,
+    password: string,
+  ) {
+    switch (type) {
+      case USER_MODELS.PEOPLE: {
+        const details = await this.peopleService.peopleRepository.update(
+          userId,
+          { password },
+        );
+        if (!details) return Promise.reject('Invalid user');
+        return { type: type, user: details };
+      }
+      case USER_MODELS.SPONSOR: {
+        const details = await this.sponsorService.sponsorRepository.update(
+          userId,
+          { password },
+        );
+        if (!details) return Promise.reject('Invalid user');
+        return { type, user: details };
+      }
+
+      default:
+        throw new NotFoundException('Invalid user');
+    }
   }
 }

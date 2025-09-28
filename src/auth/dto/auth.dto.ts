@@ -78,6 +78,7 @@ export class verifyAccountDto {
   @IsNotEmpty()
   email: string;
 }
+
 export class LoginDto {
   @ApiProperty()
   @IsEmail()
