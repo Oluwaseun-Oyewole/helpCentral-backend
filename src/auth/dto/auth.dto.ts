@@ -80,7 +80,7 @@ export class verifyAccountDto {
 }
 
 export class LoginDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Email of the child' })
   @IsEmail()
   @IsNotEmpty()
   email: string;
