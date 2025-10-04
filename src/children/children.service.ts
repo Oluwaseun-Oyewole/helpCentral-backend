@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { FilterQuery } from 'mongoose';
 import { hashPassword } from 'src/shared/utils/index.utils';
 import { ChildrenRepository } from './children.repository';
-import { ChildrenResponse } from './dto/Children-response.dto';
+import { ChildrenResponse } from './dto/children-response.dto';
 import { CreateChildrenDto } from './dto/create-children.dto';
-import { Children } from './schema/Children.schema';
+import { Children } from './schema/children.schema';
 
 @Injectable()
 export class ChildrenService {
