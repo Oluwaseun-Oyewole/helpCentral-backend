@@ -10,9 +10,9 @@ import { USER_MODELS } from 'src/shared/enums/index.enum';
 export type UserTokenDocument = HydratedDocument<UserToken>;
 
 export enum TOKEN_TYPES {
-  FORGOTPASSWORD = 'forgotPassword',
-  RESETPASSWORD = 'resetpassword',
-  EMAILVERIFICATION = 'emailVerification',
+  FORGOT_PASSWORD = 'forgotPassword',
+  RESET_PASSWORD = 'resetpassword',
+  EMAIL_VERIFICATION = 'emailVerification',
 }
 
 @Schema({ timestamps: true, collection: 'userTokens' })
@@ -27,7 +27,7 @@ export class UserToken {
     type: String,
     required: true,
     enum: USER_MODELS,
-    default: USER_MODELS.PEOPLE,
+    default: USER_MODELS.CHILDREN,
   })
   userModel: USER_MODELS;
 
@@ -43,12 +43,6 @@ export class UserToken {
 
   @Prop({ type: Date, required: true })
   expires: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  updatedAt: Date;
 }
 
 export const UserTokenSchema = SchemaFactory.createForClass(UserToken);

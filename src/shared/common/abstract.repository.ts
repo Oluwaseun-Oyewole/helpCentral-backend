@@ -7,6 +7,7 @@ import {
   Require_id,
   Schema,
   SortOrder,
+  UpdateQuery,
 } from 'mongoose';
 
 type TSort<T> =
@@ -57,5 +58,18 @@ export abstract class AbstractRepository<TSchema extends Record<string, any>> {
   async deleteMany(entityFilterQuery: FilterQuery<TSchema>): Promise<boolean> {
     const deleteResult = await this.schemaModel.deleteMany(entityFilterQuery);
     return deleteResult.deletedCount >= 1;
+  }
+
+  async update(
+    id: Schema.Types.ObjectId | string,
+    updateSchemaData: UpdateQuery<TSchema>,
+    options?: QueryOptions<TSchema>,
+  ): Promise<TSchema> {
+    return this.schemaModel
+      .findByIdAndUpdate(id, updateSchemaData, {
+        ...(options || {}),
+        new: true,
+      })
+      .lean<TSchema>();
   }
 }

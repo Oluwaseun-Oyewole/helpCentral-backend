@@ -2,13 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
+import { allowedGenders } from '../schema/children.schema';
 
-export class CreatePersonDto {
+export class CreateChildrenDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty()
@@ -19,10 +19,25 @@ export class CreatePersonDto {
   @ApiProperty()
   email: string;
 
-  @IsNumber()
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(10)
+  @ApiProperty()
+  address: string;
+
+  @IsString()
   @IsOptional()
   @ApiProperty()
-  countryCode?: number;
+  state?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  image?: string;
+
+  @IsOptional()
+  @ApiProperty()
+  gender: (typeof allowedGenders)[number];
 
   @IsNotEmpty()
   @IsString()

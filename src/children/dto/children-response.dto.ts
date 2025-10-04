@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { allowedLanguages, People } from '../schema/people.schema';
+import { Children } from '../schema/children.schema';
 
-export class PeopleResponse {
+export class ChildrenResponse {
   @ApiProperty()
   id: string;
 
@@ -12,51 +12,30 @@ export class PeopleResponse {
   email: string;
 
   @ApiProperty()
-  countryCode: number;
-
-  @ApiProperty()
   gender: string;
 
   @ApiProperty()
   address: string;
 
   @ApiProperty()
-  city: string;
-
-  @ApiProperty()
   state: string;
 
   @ApiProperty()
-  country: string;
-
-  @ApiProperty()
   image: string;
-
-  @ApiProperty()
-  language: (typeof allowedLanguages)[number];
 
   @ApiProperty({ type: Date, required: false })
   lastLoginDate: Date;
 
   @ApiProperty()
-  isActive: boolean;
+  activatedAt: Date;
 
-  // @ApiProperty({ type: Date })
-  // createdAt?: Date;
-
-  // @ApiProperty({ type: Date })
-  // updatedAt?: Date;
-
-  constructor(user: People) {
+  constructor(user: Children) {
     this.id = user._id.toString();
     this.fullname = user.fullname;
     this.email = user.email;
     this.address = user.address;
-    // this.state = user.state;
     this.gender = user.gender;
-    this.country = user.country;
-    this.isActive = user.isActive;
-    this.language = user.language;
+    this.activatedAt = user.activatedAt;
     this.lastLoginDate = user.lastLoginDate;
   }
 }

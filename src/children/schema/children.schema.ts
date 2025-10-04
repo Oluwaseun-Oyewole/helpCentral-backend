@@ -1,18 +1,26 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
-export type PeopleDocument = HydratedDocument<People>;
-export const allowedLanguages = ['en'] as const;
+export type ChildrenDocument = HydratedDocument<Children>;
 
 export const allowedGenders = ['male', 'female'] as const;
+
+export const schoolNeeds = [
+  'school_uniform',
+  'school_bags',
+  'school shoes',
+  'school_fees',
+];
+
+export type SchoolNeeds = [typeof schoolNeeds][number];
 export type Gender = (typeof allowedGenders)[number];
 
-export const PeopleSchemaName = 'People';
-@Schema({ timestamps: true, autoIndex: true, collection: PeopleSchemaName })
-export class People {
+export const ChildrenSchemaName = 'children';
+@Schema({ timestamps: true, autoIndex: true, collection: ChildrenSchemaName })
+export class Children {
   _id: MongooseSchema.Types.ObjectId;
 
-  @Prop({ unique: true, required: true })
+  @Prop({ required: true })
   fullname: string;
 
   @Prop({ required: false, select: false })
@@ -22,24 +30,13 @@ export class People {
   email: string;
 
   @Prop({ required: false })
-  country: string;
-
-  // @Prop({ required: false })
-  // state: string;
+  state: string;
 
   @Prop({ required: false })
   address?: string;
 
-  @Prop({ type: Boolean, required: false, default: false })
-  isActive: boolean;
-
-  @Prop({
-    type: String,
-    required: false,
-    enum: allowedLanguages,
-    default: 'en',
-  })
-  language: (typeof allowedLanguages)[number];
+  @Prop({ type: Date, required: false, default: null })
+  activatedAt: Date;
 
   @Prop({
     type: String,
@@ -51,7 +48,10 @@ export class People {
   @Prop({ required: false })
   image: string;
 
+  @Prop({ required: true })
+  schoolNeeds: SchoolNeeds;
+
   @Prop({ required: false, type: Date })
   lastLoginDate: Date;
 }
-export const PeopleSchema = SchemaFactory.createForClass(People);
+export const ChildrenSchema = SchemaFactory.createForClass(Children);

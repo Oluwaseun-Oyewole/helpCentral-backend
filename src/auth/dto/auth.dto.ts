@@ -2,15 +2,16 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
-import { PeopleResponse } from 'src/people/dto/people-response.dto';
-import { People } from 'src/people/schema/people.schema';
+import { ChildrenResponse } from 'src/Children/dto/Children-response.dto';
+import { allowedGenders, Children } from 'src/Children/schema/Children.schema';
+import { SponsorResponse } from 'src/sponsors/dto/sponsor-response.dto';
+import { schoolNeeds } from './../../children/schema/children.schema';
 
-export class PeopleRegisterDto {
+export class ChildrenRegisterDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
@@ -28,20 +29,82 @@ export class PeopleRegisterDto {
   @ApiProperty()
   password: string;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
   @ApiProperty()
-  countryCode?: number;
+  state?: string;
 
   @IsString()
   @IsOptional()
   @ApiProperty()
-  country?: string;
+  image?: string;
+
+  @IsOptional()
+  @ApiProperty()
+  gender: (typeof allowedGenders)[number];
+
+  @ApiProperty()
+  schoolNeeds: (typeof schoolNeeds)[number];
 
   @IsString()
   @IsOptional()
   @ApiProperty({ required: false })
-  address?: string;
+  address: string;
+}
+
+export class SponsorRegisterDto {
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(6)
+  @ApiProperty()
+  fullname: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  @ApiProperty()
+  email!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(6)
+  @ApiProperty()
+  password: string;
+}
+
+export class verifyAccountDto {
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty()
+  token: string;
+
+  @ApiProperty()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
+
+export class LoginDto {
+  @ApiProperty({ description: 'Email of the child' })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  password: string;
+}
+export class ForgotPasswordDto {
+  @IsEmail()
+  @IsNotEmpty()
+  @ApiProperty()
+  email!: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  password: string;
 }
 
 class AuthTokensDto {
@@ -52,25 +115,48 @@ class AuthTokensDto {
   refreshToken: string;
 }
 
-export class PeopleAuthResponseDto {
+export class ChildrenAuthResponseDto {
   @ApiProperty()
   message: string;
 
   @ApiProperty({ type: AuthTokensDto })
   tokens: AuthTokensDto;
 
-  @ApiProperty({ type: PeopleResponse })
-  user: PeopleResponse;
+  @ApiProperty({ type: ChildrenResponse })
+  user: ChildrenResponse;
 
   constructor(data: {
     message: string;
     tokens: Record<'accessToken' | 'refreshToken', string>;
-    user: People | PeopleResponse;
+    user: Children | ChildrenResponse;
   }) {
     ((this.message = data.message), (this.tokens = data.tokens));
     this.user =
-      data.user instanceof PeopleResponse
+      data.user instanceof ChildrenResponse
         ? data.user
-        : new PeopleResponse(data.user);
+        : new ChildrenResponse(data.user);
+  }
+}
+
+export class SponsorsAuthResponseDto {
+  @ApiProperty()
+  message: string;
+
+  @ApiProperty({ type: AuthTokensDto })
+  tokens: AuthTokensDto;
+
+  @ApiProperty({ type: SponsorResponse })
+  user: SponsorResponse;
+
+  constructor(data: {
+    message: string;
+    tokens: Record<'accessToken' | 'refreshToken', string>;
+    user: Children | SponsorResponse;
+  }) {
+    ((this.message = data.message), (this.tokens = data.tokens));
+    this.user =
+      data.user instanceof SponsorResponse
+        ? data.user
+        : new SponsorResponse(data.user);
   }
 }

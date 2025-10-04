@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { FilterQuery } from 'mongoose';
 import { hashPassword } from 'src/shared/utils/index.utils';
-import { CreateSponsorDto } from './dto/create-sponsor.dto';
-import { SponsorResponse } from './dto/sponsor-response.dto';
-import { Sponsor } from './schema/sponsor.schema';
-import { SponsorsRepository } from './sponsor.repository';
+import { ChildrenRepository } from './children.repository';
+import { ChildrenResponse } from './dto/Children-response.dto';
+import { CreateChildrenDto } from './dto/create-children.dto';
+import { Children } from './schema/Children.schema';
 
 @Injectable()
-export class SponsorsService {
-  constructor(readonly sponsorRepository: SponsorsRepository) {}
-  async createUser(input: CreateSponsorDto) {
+export class ChildrenService {
+  constructor(readonly ChildrenRepository: ChildrenRepository) {}
+  async createUser(input: CreateChildrenDto) {
     try {
       const { email, password } = input;
-      const userExists = await this.sponsorRepository.findOne({ email });
+      const userExists = await this.ChildrenRepository.findOne({ email });
       if (userExists)
         return Promise.reject(`User with ${userExists.email} already exists.`);
       const hashedPassword = await hashPassword(password);
-      const savedUser = await this.sponsorRepository.create({
+      const savedUser = await this.ChildrenRepository.create({
         ...input,
         password: hashedPassword,
       });
-      return new SponsorResponse(savedUser);
+      return new ChildrenResponse(savedUser);
     } catch (error) {
       return Promise.reject(error);
     }
@@ -28,14 +28,16 @@ export class SponsorsService {
 
   async checkIfUserExist(input: Partial<Record<'id' | 'email', string>>) {
     const { id, email } = input;
-    const query: FilterQuery<Sponsor>[] = [];
+    const query: FilterQuery<Children>[] = [];
     if (id) query.push({ _id: id });
     if (email) query.push({ email });
     if (query.length <= 0) return null;
     const formatQuery = {
       ...(query.length > 0 && { $or: query }),
     };
-    const userExists = await this.sponsorRepository.findOne({ ...formatQuery });
-    return userExists && new SponsorResponse(userExists);
+    const userExists = await this.ChildrenRepository.findOne({
+      ...formatQuery,
+    });
+    return userExists && new ChildrenResponse(userExists);
   }
 }

@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Exclude } from 'class-transformer';
 import {
   HydratedDocument,
   Schema as MongooseSchema,
@@ -21,7 +22,7 @@ export class UserSession {
   })
   user: MongooseSchema.Types.ObjectId | string;
 
-  // @Exclude()
+  @Exclude()
   @Prop({
     type: String,
     required: true,
@@ -34,12 +35,6 @@ export class UserSession {
 
   @Prop({ type: SchemaTypes.Mixed, required: false })
   payload: AccessJWTPayload;
-
-  @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  updatedAt: Date;
 }
 
 export const UserSessionSchema = SchemaFactory.createForClass(UserSession);

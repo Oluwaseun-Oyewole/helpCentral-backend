@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectId } from 'mongoose';
+import { verifyAccountDto } from 'src/auth/dto/auth.dto';
 import { USER_MODELS } from 'src/shared/enums/index.enum';
 import { TOKEN_TYPES } from './schema/user-token.schema';
 import { UserTokenRepository } from './user-token.repository';
@@ -13,7 +14,7 @@ export class UserTokensService {
     token: string;
     tokenExpires: Date;
     type: TOKEN_TYPES;
-    userType: USER_MODELS;
+    userType?: USER_MODELS;
   }) {
     try {
       const {
@@ -21,7 +22,7 @@ export class UserTokensService {
         token,
         tokenExpires: expires,
         type,
-        userType = USER_MODELS.PEOPLE,
+        userType = USER_MODELS.CHILDREN,
       } = input;
       const atLeastOneUserTokenTypeExists =
         await this.userTokenRepository.findOne({
@@ -60,7 +61,7 @@ export class UserTokensService {
         user: userId,
         token,
         type,
-        userModel: userModel || USER_MODELS.PEOPLE,
+        userModel: userModel || USER_MODELS.CHILDREN,
       });
       if (!userTokenExists) return Promise.reject('Invalid Token');
       if (new Date().getTime() > new Date(userTokenExists.expires).getTime())
@@ -69,5 +70,45 @@ export class UserTokensService {
     } catch (error) {
       return Promise.reject(error);
     }
+  }
+
+  async checkTokenIsValid(
+    token: string,
+    type: TOKEN_TYPES,
+    userModel?: USER_MODELS,
+  ) {
+    try {
+      const tokenExists = await this.userTokenRepository.findOne({
+        token,
+        type,
+        ...(userModel && { userModel }),
+      });
+      if (!tokenExists) return Promise.reject('Invalid Token');
+      if (new Date().getTime() > new Date(tokenExists.expires).getTime())
+        return Promise.reject('Token Expired');
+      return tokenExists;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  async checkEmailTokenIsValid(input: verifyAccountDto) {
+    const { token } = input;
+    try {
+      const tokenExists = await this.userTokenRepository.findOne({ token });
+      if (!tokenExists) return Promise.reject('Invalid Token');
+      if (new Date().getTime() > new Date(tokenExists.expires).getTime())
+        return Promise.reject('Token Expired');
+      return tokenExists;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  async deleteAllUserToken(userId: string) {
+    await this.userTokenRepository
+      .deleteMany({ user: userId })
+      .then(() => Promise.resolve(true))
+      .catch((error) => Promise.reject(error));
   }
 }
