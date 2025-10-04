@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { ChildrenService } from 'src/children/children.service';
-import { ChildrenResponse } from 'src/children/dto/Children-response.dto';
+import { ChildrenResponse } from 'src/children/dto/children-response.dto';
 import { MailService } from 'src/integration-services/mail/mail-service';
 import { USER_MODELS } from 'src/shared/enums/index.enum';
 import { generateLongToken, hashPassword } from 'src/shared/utils/index.utils';

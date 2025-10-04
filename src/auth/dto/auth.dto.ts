@@ -6,8 +6,8 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { ChildrenResponse } from 'src/Children/dto/Children-response.dto';
-import { allowedGenders, Children } from 'src/Children/schema/Children.schema';
+import { ChildrenResponse } from 'src/children/dto/children-response.dto';
+import { allowedGenders, Children } from 'src/children/schema/children.schema';
 import { SponsorResponse } from 'src/sponsors/dto/sponsor-response.dto';
 import { schoolNeeds } from './../../children/schema/children.schema';
 
