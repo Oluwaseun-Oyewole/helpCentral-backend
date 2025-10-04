@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { People } from '../schema/people.schema';
+import { Children } from '../schema/children.schema';
 
-export class PeopleResponse {
+export class ChildrenResponse {
   @ApiProperty()
   id: string;
 
@@ -29,7 +29,7 @@ export class PeopleResponse {
   @ApiProperty()
   activatedAt: Date;
 
-  constructor(user: People) {
+  constructor(user: Children) {
     this.id = user._id.toString();
     this.fullname = user.fullname;
     this.email = user.email;

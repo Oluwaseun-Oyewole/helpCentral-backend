@@ -15,7 +15,7 @@ export enum TOKEN_TYPES {
   EMAIL_VERIFICATION = 'emailVerification',
 }
 
-@Schema({ timestamps: true, collection: 'UserTokens' })
+@Schema({ timestamps: true, collection: 'userTokens' })
 export class UserToken {
   _id: MongooseSchema.Types.ObjectId;
 
@@ -27,7 +27,7 @@ export class UserToken {
     type: String,
     required: true,
     enum: USER_MODELS,
-    default: USER_MODELS.PEOPLE,
+    default: USER_MODELS.CHILDREN,
   })
   userModel: USER_MODELS;
 

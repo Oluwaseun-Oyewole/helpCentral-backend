@@ -3,7 +3,7 @@ import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type SponsorDocument = HydratedDocument<Sponsor>;
 
-export const SponsorSchemaName = 'SponsorsModel';
+export const SponsorSchemaName = 'sponsors';
 @Schema({ timestamps: true, autoIndex: true, collection: SponsorSchemaName })
 export class Sponsor {
   _id: MongooseSchema.Types.ObjectId;
@@ -19,9 +19,6 @@ export class Sponsor {
 
   @Prop({ type: Date, required: false, default: null })
   activatedAt: Date;
-
-  @Prop({ required: false })
-  image: string;
 
   @Prop({ required: false, type: Date })
   lastLoginDate: Date;

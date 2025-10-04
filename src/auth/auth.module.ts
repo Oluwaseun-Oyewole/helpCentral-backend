@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ChildrenModule } from 'src/children/children.module';
 import { IntegrationServicesModule } from 'src/integration-services/integration-services.module';
-import { PeopleModule } from 'src/people/people.module';
 import { SponsorsModule } from 'src/sponsors/sponsors.module';
 import { UserSessionsModule } from 'src/user-sessions/user-sessions.module';
 import { UserTokensModule } from 'src/user-tokens/user-tokens.module';
@@ -14,7 +14,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [
-    PeopleModule,
+    ChildrenModule,
     SponsorsModule,
     JwtModule.register({
       secret: appConfig().jwtsecretkey,

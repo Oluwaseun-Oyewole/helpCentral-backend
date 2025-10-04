@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Exclude } from 'class-transformer';
 import {
   HydratedDocument,
   Schema as MongooseSchema,
@@ -9,7 +10,7 @@ import { USER_MODELS } from 'src/shared/enums/index.enum';
 
 export type UserSessionDocument = HydratedDocument<UserSession>;
 
-@Schema({ timestamps: true, autoIndex: true, collection: 'UserSessions' })
+@Schema({ timestamps: true, autoIndex: true, collection: 'userSessions' })
 export class UserSession {
   _id: MongooseSchema.Types.ObjectId;
 
@@ -21,7 +22,7 @@ export class UserSession {
   })
   user: MongooseSchema.Types.ObjectId | string;
 
-  // @Exclude()
+  @Exclude()
   @Prop({
     type: String,
     required: true,

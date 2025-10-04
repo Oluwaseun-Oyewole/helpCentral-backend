@@ -6,9 +6,9 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { allowedGenders } from './../schema/people.schema';
+import { allowedGenders } from '../schema/children.schema';
 
-export class CreatePersonDto {
+export class CreateChildrenDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty()
@@ -23,7 +23,7 @@ export class CreatePersonDto {
   @IsNotEmpty()
   @MinLength(10)
   @ApiProperty()
-  address?: string;
+  address: string;
 
   @IsString()
   @IsOptional()
@@ -37,7 +37,7 @@ export class CreatePersonDto {
 
   @IsOptional()
   @ApiProperty()
-  gender?: (typeof allowedGenders)[number];
+  gender: (typeof allowedGenders)[number];
 
   @IsNotEmpty()
   @IsString()

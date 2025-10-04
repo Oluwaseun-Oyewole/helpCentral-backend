@@ -1,5 +1,5 @@
 export enum USER_MODELS {
-  PEOPLE = 'PEOPLE',
+  CHILDREN = 'CHILDREN',
   SPONSOR = 'SPONSOR',
 }
 

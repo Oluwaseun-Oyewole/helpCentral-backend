@@ -22,7 +22,7 @@ export class UserTokensService {
         token,
         tokenExpires: expires,
         type,
-        userType = USER_MODELS.PEOPLE,
+        userType = USER_MODELS.CHILDREN,
       } = input;
       const atLeastOneUserTokenTypeExists =
         await this.userTokenRepository.findOne({
@@ -61,7 +61,7 @@ export class UserTokensService {
         user: userId,
         token,
         type,
-        userModel: userModel || USER_MODELS.PEOPLE,
+        userModel: userModel || USER_MODELS.CHILDREN,
       });
       if (!userTokenExists) return Promise.reject('Invalid Token');
       if (new Date().getTime() > new Date(userTokenExists.expires).getTime())

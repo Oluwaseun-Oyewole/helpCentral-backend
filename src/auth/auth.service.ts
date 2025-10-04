@@ -8,9 +8,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { ChildrenService } from 'src/children/children.service';
+import { ChildrenResponse } from 'src/children/dto/Children-response.dto';
 import { MailService } from 'src/integration-services/mail/mail-service';
-import { PeopleResponse } from 'src/people/dto/people-response.dto';
-import { PeopleService } from 'src/people/people.service';
 import { USER_MODELS } from 'src/shared/enums/index.enum';
 import { generateLongToken, hashPassword } from 'src/shared/utils/index.utils';
 import { SponsorResponse } from 'src/sponsors/dto/sponsor-response.dto';
@@ -21,9 +21,9 @@ import { UserTokensService } from 'src/user-tokens/user-tokens.service';
 import appConfig from '../shared/config/index.config';
 import { AccessJWTPayload, LoginMode } from './auth.interface';
 import {
+  ChildrenRegisterDto,
   ForgotPasswordDto,
   LoginDto,
-  PeopleRegisterDto,
   SponsorRegisterDto,
   verifyAccountDto,
 } from './dto/auth.dto';
@@ -31,8 +31,8 @@ import {
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(forwardRef(() => PeopleService))
-    private readonly peopleService: PeopleService,
+    @Inject(forwardRef(() => ChildrenService))
+    private readonly childrenService: ChildrenService,
     private readonly sponsorService: SponsorsService,
     private readonly userTokenService: UserTokensService,
     private readonly jwtService: JwtService,
@@ -40,11 +40,11 @@ export class AuthService {
     private mailService: MailService,
   ) {}
 
-  async peopleLogin(data: LoginDto, mode: LoginMode) {
+  async childrenLogin(data: LoginDto, mode: LoginMode) {
     try {
       const { email, password } = data;
       const user =
-        await this.peopleService.peopleRepository.getUserWithPassword({
+        await this.childrenService.ChildrenRepository.getUserWithPassword({
           email,
         });
 
@@ -60,16 +60,16 @@ export class AuthService {
           email,
           id: user._id.toString(),
           name: user.fullname,
-          type: USER_MODELS.PEOPLE,
+          type: USER_MODELS.CHILDREN,
         }),
       ]);
-      this.peopleService.peopleRepository.update(user._id, {
+      this.childrenService.ChildrenRepository.update(user._id, {
         $set: { lastLoginDate: new Date().toISOString() },
       });
       return {
         message: 'Login Successful',
         tokens,
-        user: new PeopleResponse(user),
+        user: new ChildrenResponse(user),
       };
     } catch (error) {
       return Promise.reject(error);
@@ -112,9 +112,9 @@ export class AuthService {
     }
   }
 
-  async peopleRegister(data: PeopleRegisterDto) {
+  async childrenRegister(data: ChildrenRegisterDto) {
     const { email, fullname } = data;
-    const savedUser = await this.peopleService.createUser({ ...data });
+    const savedUser = await this.childrenService.createUser({ ...data });
     const emailVerificationToken = generateLongToken();
     const emailVerificationLink = `${appConfig().appLink}/verify/?token=${emailVerificationToken}&email=${savedUser.email}`;
     const tokenExpires = new Date(new Date().getTime() + 15 * 60 * 1000); //15 minutes
@@ -125,7 +125,7 @@ export class AuthService {
       token: emailVerificationToken,
       tokenExpires,
       type: TOKEN_TYPES.EMAIL_VERIFICATION,
-      userType: USER_MODELS.PEOPLE,
+      userType: USER_MODELS.CHILDREN,
     });
 
     await this.mailService.sendRegistrationEmail({
@@ -138,7 +138,7 @@ export class AuthService {
       email,
       id: userId,
       name: fullname,
-      type: USER_MODELS.PEOPLE,
+      type: USER_MODELS.CHILDREN,
     });
 
     return {
@@ -184,17 +184,17 @@ export class AuthService {
     };
   }
 
-  async verifyPeopleAccount(input: verifyAccountDto) {
+  async verifyChildrenAccount(input: verifyAccountDto) {
     try {
       const isTokenValid =
         await this.userTokenService.checkEmailTokenIsValid(input);
-      const details = await this.getUserTypeDetails(USER_MODELS.PEOPLE, {
+      const details = await this.getUserTypeDetails(USER_MODELS.CHILDREN, {
         email: input.email,
       });
       if (!isTokenValid) Promise.reject('Invalid token');
       if (!details || !details?.user) throw new Error('User Does Not Exist');
       if (details?.user.activatedAt) throw new Error('User already activated');
-      await this.peopleService.peopleRepository.update(details.user.id, {
+      await this.childrenService.ChildrenRepository.update(details.user.id, {
         $set: {
           activatedAt: new Date().toISOString(),
         },
@@ -233,7 +233,7 @@ export class AuthService {
   }
   async resendEmailLink(input: verifyAccountDto) {
     try {
-      const user = await this.peopleService.checkIfUserExist({
+      const user = await this.childrenService.checkIfUserExist({
         email: input.email,
       });
       if (!user) throw new Error('User Does Not Exist');
@@ -357,8 +357,8 @@ export class AuthService {
     user: Partial<Record<'id' | 'email', string>>,
   ) {
     switch (type) {
-      case USER_MODELS.PEOPLE: {
-        const details = await this.peopleService.checkIfUserExist(user);
+      case USER_MODELS.CHILDREN: {
+        const details = await this.childrenService.checkIfUserExist(user);
         if (!details) return Promise.reject('Invalid user');
         return { type: type, user: details };
       }
@@ -396,8 +396,8 @@ export class AuthService {
     });
     return { accessToken, refreshToken };
   }
-  async validateGoogleUser(data: PeopleRegisterDto) {
-    const savedUser = await this.peopleService.createUser({ ...data });
+  async validateGoogleUser(data: ChildrenRegisterDto) {
+    const savedUser = await this.childrenService.createUser({ ...data });
     return savedUser;
   }
 
@@ -407,8 +407,8 @@ export class AuthService {
     password: string,
   ) {
     switch (type) {
-      case USER_MODELS.PEOPLE: {
-        const details = await this.peopleService.peopleRepository.update(
+      case USER_MODELS.CHILDREN: {
+        const details = await this.childrenService.ChildrenRepository.update(
           userId,
           { password },
         );

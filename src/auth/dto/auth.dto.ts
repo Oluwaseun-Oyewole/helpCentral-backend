@@ -6,11 +6,12 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { PeopleResponse } from 'src/people/dto/people-response.dto';
-import { allowedGenders, People } from 'src/people/schema/people.schema';
+import { ChildrenResponse } from 'src/Children/dto/Children-response.dto';
+import { allowedGenders, Children } from 'src/Children/schema/Children.schema';
 import { SponsorResponse } from 'src/sponsors/dto/sponsor-response.dto';
+import { schoolNeeds } from './../../children/schema/children.schema';
 
-export class PeopleRegisterDto {
+export class ChildrenRegisterDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
@@ -40,12 +41,15 @@ export class PeopleRegisterDto {
 
   @IsOptional()
   @ApiProperty()
-  gender?: (typeof allowedGenders)[number];
+  gender: (typeof allowedGenders)[number];
+
+  @ApiProperty()
+  schoolNeeds: (typeof schoolNeeds)[number];
 
   @IsString()
   @IsOptional()
   @ApiProperty({ required: false })
-  address?: string;
+  address: string;
 }
 
 export class SponsorRegisterDto {
@@ -111,26 +115,26 @@ class AuthTokensDto {
   refreshToken: string;
 }
 
-export class PeopleAuthResponseDto {
+export class ChildrenAuthResponseDto {
   @ApiProperty()
   message: string;
 
   @ApiProperty({ type: AuthTokensDto })
   tokens: AuthTokensDto;
 
-  @ApiProperty({ type: PeopleResponse })
-  user: PeopleResponse;
+  @ApiProperty({ type: ChildrenResponse })
+  user: ChildrenResponse;
 
   constructor(data: {
     message: string;
     tokens: Record<'accessToken' | 'refreshToken', string>;
-    user: People | PeopleResponse;
+    user: Children | ChildrenResponse;
   }) {
     ((this.message = data.message), (this.tokens = data.tokens));
     this.user =
-      data.user instanceof PeopleResponse
+      data.user instanceof ChildrenResponse
         ? data.user
-        : new PeopleResponse(data.user);
+        : new ChildrenResponse(data.user);
   }
 }
 
@@ -147,7 +151,7 @@ export class SponsorsAuthResponseDto {
   constructor(data: {
     message: string;
     tokens: Record<'accessToken' | 'refreshToken', string>;
-    user: People | SponsorResponse;
+    user: Children | SponsorResponse;
   }) {
     ((this.message = data.message), (this.tokens = data.tokens));
     this.user =

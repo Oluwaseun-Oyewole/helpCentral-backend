@@ -27,6 +27,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       fullname: name.givenName + '' + name.familyName,
       password: '',
       gender: 'female',
+      address: '',
+      schoolNeeds: '',
     });
     done(null, user);
   }

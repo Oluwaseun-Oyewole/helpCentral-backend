@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { FilterQuery } from 'mongoose';
 import { hashPassword } from 'src/shared/utils/index.utils';
-import { CreatePersonDto } from './dto/create-person.dto';
-import { PeopleResponse } from './dto/people-response.dto';
-import { PeopleRepository } from './people.repository';
-import { People } from './schema/people.schema';
+import { ChildrenRepository } from './children.repository';
+import { ChildrenResponse } from './dto/Children-response.dto';
+import { CreateChildrenDto } from './dto/create-children.dto';
+import { Children } from './schema/Children.schema';
 
 @Injectable()
-export class PeopleService {
-  constructor(readonly peopleRepository: PeopleRepository) {}
-  async createUser(input: CreatePersonDto) {
+export class ChildrenService {
+  constructor(readonly ChildrenRepository: ChildrenRepository) {}
+  async createUser(input: CreateChildrenDto) {
     try {
       const { email, password } = input;
-      const userExists = await this.peopleRepository.findOne({ email });
+      const userExists = await this.ChildrenRepository.findOne({ email });
       if (userExists)
         return Promise.reject(`User with ${userExists.email} already exists.`);
       const hashedPassword = await hashPassword(password);
-      const savedUser = await this.peopleRepository.create({
+      const savedUser = await this.ChildrenRepository.create({
         ...input,
         password: hashedPassword,
       });
-      return new PeopleResponse(savedUser);
+      return new ChildrenResponse(savedUser);
     } catch (error) {
       return Promise.reject(error);
     }
@@ -28,14 +28,16 @@ export class PeopleService {
 
   async checkIfUserExist(input: Partial<Record<'id' | 'email', string>>) {
     const { id, email } = input;
-    const query: FilterQuery<People>[] = [];
+    const query: FilterQuery<Children>[] = [];
     if (id) query.push({ _id: id });
     if (email) query.push({ email });
     if (query.length <= 0) return null;
     const formatQuery = {
       ...(query.length > 0 && { $or: query }),
     };
-    const userExists = await this.peopleRepository.findOne({ ...formatQuery });
-    return userExists && new PeopleResponse(userExists);
+    const userExists = await this.ChildrenRepository.findOne({
+      ...formatQuery,
+    });
+    return userExists && new ChildrenResponse(userExists);
   }
 }

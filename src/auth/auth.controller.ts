@@ -26,10 +26,10 @@ import { USER_MODELS } from 'src/shared/enums/index.enum';
 import appConfig from '../shared/config/index.config';
 import { AuthService } from './auth.service';
 import {
+  ChildrenAuthResponseDto,
+  ChildrenRegisterDto,
   ForgotPasswordDto,
   LoginDto,
-  PeopleAuthResponseDto,
-  PeopleRegisterDto,
   ResetPasswordDto,
   SponsorRegisterDto,
   SponsorsAuthResponseDto,
@@ -44,17 +44,17 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @ApiBearerAuth()
-  @SuccessApiResponse(PeopleAuthResponseDto, {
+  @SuccessApiResponse(ChildrenAuthResponseDto, {
     description: 'Successfully authenticated and returned access tokens',
   })
-  @ApiOperation({ summary: 'People login' })
+  @ApiOperation({ summary: 'Children login' })
   @ApiOperation({
-    summary: 'Login for people users',
+    summary: 'Login for children',
     description:
-      'Authenticate people users with email and password credentials',
+      'Authenticate children users with email and password credentials',
   })
   // @ApiCreatedResponse({
-  //   type: PeopleAuthResponseDto,
+  //   type: ChildrenAuthResponseDto,
   //   description: 'Successfully authenticated and returned access tokens',
   // })
   @ApiResponse({
@@ -66,10 +66,12 @@ export class AuthController {
     description: 'Forbidden - Account not verified or suspended',
   })
   @Public()
-  @Post('/people/login')
-  async peopleLogin(@Body() body: LoginDto): Promise<PeopleAuthResponseDto> {
+  @Post('/children/login')
+  async childrenLogin(
+    @Body() body: LoginDto,
+  ): Promise<ChildrenAuthResponseDto> {
     return await this.authService
-      .peopleLogin(body, 'credential_provider')
+      .childrenLogin(body, 'credential_provider')
       .catch((error: Error) => {
         throw new BadRequestException(error.message || error, {
           cause: error,
@@ -78,14 +80,14 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @SuccessApiResponse(PeopleAuthResponseDto, {
+  @SuccessApiResponse(ChildrenAuthResponseDto, {
     description: 'Successfully authenticated and returned access tokens',
   })
   @ApiOperation({ summary: 'Sponsor login' })
   @ApiOperation({
     summary: 'Login for sponsor users',
     description:
-      'Authenticate people users with email and password credentials',
+      'Authenticate sponsor users with email and password credentials',
   })
   @ApiResponse({
     status: 401,
@@ -109,15 +111,17 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Public()
-  @Post('/people/register')
-  async peopleRegister(
-    @Body() body: PeopleRegisterDto,
-  ): Promise<PeopleAuthResponseDto> {
-    return await this.authService.peopleRegister(body).catch((error: Error) => {
-      throw new BadRequestException(error.message || error, {
-        cause: error,
+  @Post('/children/register')
+  async childrenRegister(
+    @Body() body: ChildrenRegisterDto,
+  ): Promise<ChildrenAuthResponseDto> {
+    return await this.authService
+      .childrenRegister(body)
+      .catch((error: Error) => {
+        throw new BadRequestException(error.message || error, {
+          cause: error,
+        });
       });
-    });
   }
 
   @ApiBearerAuth()
@@ -137,10 +141,10 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Public()
-  @Post('/people/verify')
-  async verifyPeopleAccount(@Body() body: verifyAccountDto) {
+  @Post('/children/verify')
+  async verifyChildrenAccount(@Body() body: verifyAccountDto) {
     return await this.authService
-      .verifyPeopleAccount(body)
+      .verifyChildrenAccount(body)
       .catch((error: Error) => {
         throw new BadRequestException(error.message || error, {
           cause: error,
@@ -150,7 +154,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Public()
-  @Post('/people/verify')
+  @Post('/sponsor/verify')
   async verifySponsorAccount(@Body() body: verifyAccountDto) {
     return await this.authService
       .verifySponsorAccount(body)
@@ -215,10 +219,10 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Public()
-  @Post('/people/forgotPassword')
-  async peopleForgotPassword(@Body() body: ForgotPasswordDto) {
+  @Post('/children/forgotPassword')
+  async childrenForgotPassword(@Body() body: ForgotPasswordDto) {
     return await this.authService
-      .forgotPassword(body, USER_MODELS.PEOPLE)
+      .forgotPassword(body, USER_MODELS.CHILDREN)
       .catch((error) => {
         throw new BadRequestException(error);
       });
@@ -226,7 +230,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Public()
-  @Post('/people/sponsorPassword')
+  @Post('/children/sponsorPassword')
   async sponsorForgotPassword(@Body() body: ForgotPasswordDto) {
     return await this.authService
       .forgotPassword(body, USER_MODELS.SPONSOR)
@@ -245,7 +249,7 @@ export class AuthController {
   @Get('/google/callback')
   async googleCallback(@Req() req, @Res() res) {
     const response = await this.authService
-      .peopleLogin(
+      .childrenLogin(
         { email: req.user.email, password: req.user.password },
         'oauth',
       )
